@@ -1,4 +1,4 @@
-(defproject lwm "1.0.0-SNAPSHOT"
+(defproject lwm "0.0.1"
   :aot [lwm.core]
   :description "FIXME: write"
   :dependencies [[org.clojure/clojure "1.3.0"]
