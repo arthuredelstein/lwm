@@ -3,11 +3,12 @@
            (org.apache.commons.math.linear Array2DRowRealMatrix
                                            LUDecompositionImpl))
   (:gen-class
-    :name LocalWeightedMean
-    :init [generate-lwm-fn]
-    :constructors {[Integer/TYPE List] []}
-    :state lwm-function
-    :methods [[transform [Point2D$Double] Point2D$Double]]))
+    :name valelab.LocalWeightedMean
+    :init init
+    :constructors {[Integer java.util.List] nil}
+    :state lwmFunction
+    :methods [[transform [java.awt.geom.Point2D$Double] java.awt.geom.Point2D$Double]
+              ^{:static true} [randomTestPoints [Integer] java.util.List]]))
 
 (defn nearest-neighbors [point-pair n point-pairs]
   (take n (sort-by #(.distance (first point-pair) (first %)) point-pairs)))
@@ -74,33 +75,36 @@
 
 (defn make-component-maps [pt exponents control-points]
   (for [control-point control-points]
-                  (let [R (/ (.distance pt (:point control-point))
-                             (:Rn control-point))
-                        eval-part #(evaluate-polynomial (.x pt) (.y pt)
-                                                        (% control-point)
-                                                        exponents)]
-                    (when-let [weight (weight-function R)]
-                      { :w weight
-                       :wpx (* weight (eval-part :polyX))
-                       :wpy (* weight (eval-part :polyY))}))))
+    (let [R (/ (.distance pt (:point control-point))
+               (:Rn control-point))]
+      (when-let [weight (weight-function R)]
+        (let [eval-part #(evaluate-polynomial (.x pt) (.y pt)
+                                              (% control-point)
+                                              exponents)]
+          {:w weight
+           :wpx (* weight (eval-part :polyX))
+           :wpy (* weight (eval-part :polyY))})))))
 
 (defn generate-lwm-fn [order point-pairs]
   (let [exponents (polynomial-exponents order)
-        _ (println exponents)
         control-points (create-control-points order point-pairs)]
     (fn [pt]
       (weighted-mean-xy
         (filter identity
                 (make-component-maps pt exponents control-points))))))
         
+;; java interop
+
+(defn -init [order point-pairs]
+  [[] (generate-lwm-fn order point-pairs)])
 
 (defn -transform [this src-point]
-  ((.lwm-function this) src-point))
+  ((.lwmFunction this) src-point))
               
 ;; tests
 
 (defn create-random-points [n]
   (repeatedly n #(Point2D$Double. (rand) (rand))))
 
-(defn test-nearest-neighbor-map []
-  (nearest-neighbor-map 5 (create-random-points 1000)))
+(defn -randomTestPoints [n]
+  (partition 2 (create-random-points (* 2 n))))
