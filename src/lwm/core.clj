@@ -44,9 +44,6 @@
 
 (defn evaluate-polynomial [x y coeffs exponents]
   (apply + (map * coeffs (power-terms x y exponents))))
-
-(defn neighbor-distance [sorted-neighbor-group]
-  (.distance (first sorted-neighbor-group) (last sorted-neighbor-group)))
         
 (defrecord control-point [point Rn polyX polyY])
 
