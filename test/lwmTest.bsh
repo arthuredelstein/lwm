@@ -1,0 +1,31 @@
+import java.awt.geom.Point2D;
+import valelab.LocalWeightedMean;
+
+
+// First use random test points:
+
+points = LocalWeightedMean.randomTestPoints(100);
+lwm = new LocalWeightedMean(2, points);
+result = lwm.transform(new Point2D.Double(0.1, 0.2));
+print("\nresult: "+result);
+
+// Now demonstrate with a rectangular grid:
+
+points = new ArrayList();
+
+addPoint(points, srcX, srcY, destX, destY) {
+   pair = new ArrayList();
+   pair.add(new Point2D.Double(srcX, srcY));
+   pair.add(new Point2D.Double(destX, destY));
+   points.add(pair);
+}
+addPoint(points, 0,0,0,0);
+addPoint(points, 0,1,0,2);
+addPoint(points, 1,0,2,0);
+addPoint(points, 1,1,2,2);
+
+lwm2 = new LocalWeightedMean(1, points);
+result2 = lwm2.transform(new Point2D.Double(0.5, 0.5));
+print("result2: "+result2);
+
+update();
