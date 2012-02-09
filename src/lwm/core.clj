@@ -2,6 +2,7 @@
   (:import (java.awt.geom Point2D$Double)
            (org.apache.commons.math.linear Array2DRowRealMatrix
                                            LUDecompositionImpl))
+  (:require lwm.neighbors)
   (:gen-class
     :name valelab.LocalWeightedMean
     :init init
