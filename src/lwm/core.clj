@@ -10,8 +10,8 @@
     :methods [[transform [java.awt.geom.Point2D$Double] java.awt.geom.Point2D$Double]
               ^{:static true} [randomTestPoints [Integer] java.util.List]]))
 
-(defn nearest-neighbors [point-pair n point-pairs]
-  (take n (sort-by #(.distance (first point-pair) (first %)) point-pairs)))
+(defn nearest-neighbors [point n points]
+  (take n (sort-by #(.distance point %) points)))
 
 (defn weight-function [R]
   (when (< R 1)
@@ -49,8 +49,9 @@
 
 (defn create-control-point [point-pair order point-pairs]
   (let [exponents (polynomial-exponents order)
-        neighbors (nearest-neighbors point-pair
-                                     (count exponents) point-pairs)
+        neighbors (nearest-neighbors (first point-pair)
+                                     (count exponents)
+                                     (map first point-pairs))
         src-point (first point-pair)
         [polyX polyY] (fit-polynomial exponents neighbors)]
     (control-point. src-point
@@ -105,3 +106,16 @@
 
 (defn -randomTestPoints [n]
   (partition 2 (create-random-points (* 2 n))))
+
+(defn find-neighbors [size n k]
+  (let [q (create-random-points size)]
+    (time (doseq [q0 (take k q)]
+            (nearest-neighbors q0 n q)))))
+
+(defn find-neighbors-other [size n k]
+  (let [q (create-random-points size)]
+    (time
+      (let [finder (lwm.neighbors/nearest-neighbor-finder q)]
+        (doseq [q0 (take k q)]
+          (finder q0 n))))))
+     
