@@ -48,20 +48,21 @@
         
 (defrecord control-point [point Rn polyX polyY])
 
-(defn create-control-point [point-pair order point-pairs]
-  (let [exponents (polynomial-exponents order)
-        neighbors (nearest-neighbors (first point-pair)
+(defn create-control-point [point-pair order point-map]
+  (let [src-point (first point-pair)
+        exponents (polynomial-exponents order)
+        neighbors (nearest-neighbors src-point
                                      (count exponents)
-                                     (map first point-pairs))
-        src-point (first point-pair)
-        [polyX polyY] (fit-polynomial exponents neighbors)]
+                                     (keys point-map))
+        [polyX polyY] (fit-polynomial exponents
+                                      (select-keys point-map neighbors))]
     (control-point. src-point
-                    (.distance src-point (first (last neighbors)))
+                    (.distance src-point (last neighbors))
                     polyX
                     polyY)))
 
-(defn create-control-points [order point-pairs]
-  (map #(create-control-point % order point-pairs) point-pairs))
+(defn create-control-points [order point-map]
+  (map #(create-control-point % order point-map) point-map))
 
 (defn sum-vals [m kw]
   (apply + (map kw m)))
@@ -85,8 +86,9 @@
            :wpy (* weight (eval-part :polyY))})))))
 
 (defn generate-lwm-fn [order point-pairs]
-  (let [exponents (polynomial-exponents order)
-        control-points (create-control-points order point-pairs)]
+  (let [point-map (into {} point-pairs)
+        exponents (polynomial-exponents order)
+        control-points (create-control-points order point-map)]
     (fn [pt]
       (weighted-mean-xy
         (filter identity
