@@ -1,5 +1,6 @@
 (ns lwm.core
   (:import (java.awt.geom Point2D$Double)
+           (java.util ArrayList)
            (org.apache.commons.math.linear Array2DRowRealMatrix
                                            LUDecompositionImpl))
   (:require lwm.neighbors)
@@ -58,9 +59,9 @@
         
 (defrecord control-point [point Rn polyX polyY])
 
-(defn create-control-point [src-point order point-map neighbor-finder]
+(defn create-control-point [src-point order point-map src-points]
   (let [exponents (polynomial-exponents order)
-        neighbors (neighbor-finder src-point (count exponents))
+        neighbors (nearest-neighbors-brute src-point (count exponents) src-points)
         [polyX polyY] (fit-polynomial exponents
                                       (select-keys point-map neighbors))]
     (control-point. src-point
@@ -69,9 +70,8 @@
                     polyY)))
 
 (defn create-control-points [order point-map]
-  (let [src-points (keys point-map)
-        neighbor-finder (lwm.neighbors/nearest-neighbor-finder src-points order)]
-    (map #(create-control-point % order point-map neighbor-finder) src-points)))
+  (let [src-points (keys point-map)]
+    (map #(create-control-point % order point-map src-points) src-points)))
 
 (defn sum-vals [m kw]
   (apply + (map kw m)))
@@ -112,7 +112,7 @@
   ((.lwmFunction this) src-point))
               
 (defn -findNeighbors [point n points]
-  (nearest-neighbors-brute point n points))
+  (ArrayList. (nearest-neighbors-brute point n points)))
 
 (defn -findNeighbor [point points]
   (nearest-neighbor-brute point points))

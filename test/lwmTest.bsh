@@ -1,7 +1,8 @@
 import java.awt.geom.Point2D;
+import java.util.Random;
 import valelab.LocalWeightedMean;
-import valelab.NearestNeighborFinder;
 
+rand = new Random();
 
 
 // Demonstrate with a rectangular grid:
@@ -16,21 +17,22 @@ addPair(pointPairs, 0,1,0,2);
 addPair(pointPairs, 1,0,2,0);
 addPair(pointPairs, 1,1,2,2);
 
-list = new ArrayList();
-addPoint(list, x,y) {
-   list.add(new Point2D.Double(x,y));
-}
-addPoint(list, 0, 0);
-addPoint(list, 0, 1);
-addPoint(list, 1, 0);
-addPoint(list, 1, 1);
-
-
-f = new NearestNeighborFinder(list);
-l = f.find(new Point2D.Double(0.1,0.1));
-
+/*
 lwm = new LocalWeightedMean(1, pointPairs);
 result = lwm.transform(new Point2D.Double(0.5, 0.5));
 print("result: "+result);
+*/
+
+// Demo finding nearest neighbors:
+
+pointList = new ArrayList();
+
+for (int i=0;i<100l++i) {
+   pointList.add(new Point2D.Double(rand.nextDouble(), rand.nextDouble()));
+}
+
+singlePoint = LocalWeightedMean.findNeighbor(new Point2D.Double(0.5, 0.5), pointList);
+multiplePoints = LocalWeightedMean.findNeighbors(new Point2D.Double(0.5, 0.5), 10, pointList);
+
 
 update();
