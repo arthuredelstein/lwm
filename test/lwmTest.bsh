@@ -4,8 +4,7 @@ import valelab.LocalWeightedMean;
 
 rand = new Random();
 
-
-// Demonstrate with a rectangular grid:
+// Demonstrate LWM with a rectangular grid:
 
 pointPairs = new HashMap();
 
@@ -17,22 +16,25 @@ addPair(pointPairs, 0,1,0,2);
 addPair(pointPairs, 1,0,2,0);
 addPair(pointPairs, 1,1,2,2);
 
-/*
-lwm = new LocalWeightedMean(1, pointPairs);
+
+lwm = new LocalWeightedMean(/* polynomial order*/ 1, pointPairs); 
 result = lwm.transform(new Point2D.Double(0.5, 0.5));
-print("result: "+result);
-*/
+print("transformed point: "+result);
+
 
 // Demo finding nearest neighbors:
 
 pointList = new ArrayList();
 
-for (int i=0;i<100l++i) {
+for (int i=0;i<100;++i) {
    pointList.add(new Point2D.Double(rand.nextDouble(), rand.nextDouble()));
 }
+
 
 singlePoint = LocalWeightedMean.findNeighbor(new Point2D.Double(0.5, 0.5), pointList);
 multiplePoints = LocalWeightedMean.findNeighbors(new Point2D.Double(0.5, 0.5), 10, pointList);
 
+print("nearest point:" + singlePoint);
+print("nearest multiple points:" + multiplePoints);
 
 update();
