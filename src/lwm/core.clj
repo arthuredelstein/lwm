@@ -11,10 +11,12 @@
     :methods [[transform [java.awt.geom.Point2D$Double] java.awt.geom.Point2D$Double]
               ^{:static true} [randomTestPoints [Integer] java.util.List]
               ^{:static true} [findNeighbor  [java.awt.geom.Point2D$Double
-                                             List] java.awt.geom.Point2D$Double]
+                                             java.util.List]
+                                 java.awt.geom.Point2D$Double]
               ^{:static true} [findNeighbors [java.awt.geom.Point2D$Double
                                              Integer
-                                             List] java.util.List]]))
+                                             java.util.List]
+                                 java.util.List]]))
 
 (defn nearest-neighbor-brute [point points]
   (apply min-key #(.distance point %) points))
