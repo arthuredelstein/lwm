@@ -6,12 +6,20 @@
   (:gen-class
     :name valelab.LocalWeightedMean
     :init init
-    :constructors {[Integer java.util.List] nil}
+    :constructors {[Integer java.util.Map] nil}
     :state lwmFunction
     :methods [[transform [java.awt.geom.Point2D$Double] java.awt.geom.Point2D$Double]
-              ^{:static true} [randomTestPoints [Integer] java.util.List]]))
+              ^{:static true} [randomTestPoints [Integer] java.util.List]
+              ^{:static true} [findNeighbor  [java.awt.geom.Point2D$Double
+                                             List] java.awt.geom.Point2D$Double]
+              ^{:static true} [findNeighbors [java.awt.geom.Point2D$Double
+                                             Integer
+                                             List] java.util.List]]))
 
-(defn nearest-neighbors [point n points]
+(defn nearest-neighbor-brute [point points]
+  (apply min-key #(.distance point %) points))
+
+(defn nearest-neighbors-brute [point n points]
   (take n (sort-by #(.distance point %) points)))
 
 (defn weight-function [R]
@@ -48,12 +56,9 @@
         
 (defrecord control-point [point Rn polyX polyY])
 
-(defn create-control-point [point-pair order point-map]
-  (let [src-point (first point-pair)
-        exponents (polynomial-exponents order)
-        neighbors (nearest-neighbors src-point
-                                     (count exponents)
-                                     (keys point-map))
+(defn create-control-point [src-point order point-map neighbor-finder]
+  (let [exponents (polynomial-exponents order)
+        neighbors (neighbor-finder src-point (count exponents))
         [polyX polyY] (fit-polynomial exponents
                                       (select-keys point-map neighbors))]
     (control-point. src-point
@@ -62,7 +67,9 @@
                     polyY)))
 
 (defn create-control-points [order point-map]
-  (map #(create-control-point % order point-map) point-map))
+  (let [src-points (keys point-map)
+        neighbor-finder (lwm.neighbors/nearest-neighbor-finder src-points order)]
+    (map #(create-control-point % order point-map neighbor-finder) src-points)))
 
 (defn sum-vals [m kw]
   (apply + (map kw m)))
@@ -85,9 +92,9 @@
            :wpx (* weight (eval-part :polyX))
            :wpy (* weight (eval-part :polyY))})))))
 
-(defn generate-lwm-fn [order point-pairs]
-  (let [point-map (into {} point-pairs)
-        exponents (polynomial-exponents order)
+(defn generate-lwm-fn [order point-map]
+  (def q point-map)
+  (let [exponents (polynomial-exponents order)
         control-points (create-control-points order point-map)]
     (fn [pt]
       (weighted-mean-xy
@@ -96,24 +103,32 @@
         
 ;; java interop
 
-(defn -init [order point-pairs]
-  [[] (generate-lwm-fn order point-pairs)])
+(defn -init [order point-map]
+  [[] (generate-lwm-fn order point-map)])
 
 (defn -transform [this src-point]
   ((.lwmFunction this) src-point))
               
-;; tests
+(defn -findNeighbors [point n points]
+  (nearest-neighbors-brute point n points))
+
+(defn -findNeighbor [point points]
+  (nearest-neighbor-brute point points))
+  
+  
+  ;; tests
 
 (defn create-random-points [n]
   (repeatedly n #(Point2D$Double. (rand) (rand))))
 
-(defn -randomTestPoints [n]
-  (partition 2 (create-random-points (* 2 n))))
+(defn -randomTestPointPairs [n]
+  (into {} (map vec (partition 2 (create-random-points (* 2 n))))))
+
 
 (defn find-neighbors [size n k]
   (let [q (create-random-points size)]
     (time (doseq [q0 (take k q)]
-            (nearest-neighbors q0 n q)))))
+            (lwm.neighbors/nearest-neighbors q0 n q)))))
 
 (defn find-neighbors-other [size n k]
   (let [q (create-random-points size)]

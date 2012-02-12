@@ -16,14 +16,15 @@
         i))))
 
 (defn positions [point by-x by-y]
+  ;(println point by-x by-y)
   [(binary-search point #(compare (.x %1) (.x %2)) by-x)
    (binary-search point #(compare (.y %1) (.y %2)) by-y)])        
 
 (defn get-rect [xi0 yi0 n by-x by-y]
-  {:r (get by-x (+ xi0 n))
-   :l (get by-x (- xi0 n))
-   :t (get by-y (+ yi0 n))
-   :b (get by-y (- yi0 n))})
+  {:r (get by-x (min (dec (count by-x)) (+ xi0 n)))
+   :l (get by-x (max 0 (- xi0 n)))
+   :t (get by-y (min (dec (count by-y)) (+ yi0 n)))
+   :b (get by-y (max 0 (- yi0 n)))})
 
 (defn expanse [point edge-points]
   (let [x0 (.x point)
@@ -44,18 +45,23 @@
 
 (defn nearest-neighbors [point n by-x by-y]
   (let [[xi0 yi0] (positions point by-x by-y)]
-    (loop [i 0 neighbor-candidates []]
+    (loop [i 1 neighbor-candidates []]
+      (Thread/sleep 30)
       (let [edge-points (get-rect xi0 yi0 i by-x by-y)
             furthest-candidate (last neighbor-candidates)]
-        (if (and (<= n (count neighbor-candidates))
+        (println edge-points furthest-candidate)
+        (if (and furthest-candidate
+                 (<= n (count neighbor-candidates))
                  (< (.distance point furthest-candidate)
                     (apply min (filter identity (expanse point edge-points)))))
           neighbor-candidates
           (let [all-candidates (set (concat neighbor-candidates (filter identity (vals edge-points))))
                 new-candidates (take n (sort-by #(.distance point %) all-candidates))]
+            (println new-candidates)
             (recur (inc i) new-candidates)))))))
           
 (defn nearest-neighbor-finder [points]
+  (def plast points)
   (let [sorted-points (sort-points points)]
     (fn [point n]
       (apply nearest-neighbors point n sorted-points))))
