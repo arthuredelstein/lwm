@@ -16,8 +16,9 @@ addPair(pointPairs, 0,1,0,2);
 addPair(pointPairs, 1,0,2,0);
 addPair(pointPairs, 1,1,2,2);
 
-
+//LocalWeightedMean(int polynomialOrder, List<List<Point2D.Double>> pointPairs)
 lwm = new LocalWeightedMean(/* polynomial order*/ 1, pointPairs); 
+//LocalWeightedMean.transform(Point2D.Double srcPoint)
 result = lwm.transform(new Point2D.Double(0.5, 0.5));
 print("transformed point: "+result);
 
@@ -30,8 +31,10 @@ for (int i=0;i<100;++i) {
    pointList.add(new Point2D.Double(rand.nextDouble(), rand.nextDouble()));
 }
 
-
+// findNeighbor(Point2D.Double point, List<Point2D.Double> points) 
 singlePoint = LocalWeightedMean.findNeighbor(new Point2D.Double(0.5, 0.5), pointList);
+
+// findNeighbors(Point2D.Double point, number of desired points, List<Point2D.Double> points) 
 multiplePoints = LocalWeightedMean.findNeighbors(new Point2D.Double(0.5, 0.5), 10, pointList);
 
 print("nearest point:" + singlePoint);
