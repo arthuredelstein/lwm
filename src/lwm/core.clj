@@ -2,7 +2,8 @@
   (:import (java.awt.geom Point2D$Double)
            (java.util ArrayList)
            (org.apache.commons.math.linear Array2DRowRealMatrix
-                                           LUDecompositionImpl))
+                                           LUDecompositionImpl)
+           (ags.utils KdTree$SqrEuclid))
   (:require lwm.neighbors)
   (:gen-class
     :name valelab.LocalWeightedMean
@@ -25,6 +26,23 @@
 (defn nearest-neighbors-brute [point n points]
   (take n (sort-by #(.distance point %) points)))
 
+(defn point-to-array [^Point2D$Double point]
+  (double-array [(.x point) (.y point)]))
+
+(defn setup-kd-tree [points]
+  (let [points (vec points)
+        tree (KdTree$SqrEuclid. 2 (Integer. Integer/MAX_VALUE))]
+    (dotimes [i (count points)]
+      (let [point (points i)]
+        (.addPoint tree (point-to-array point) i)))
+    {:kd-tree tree
+     :points points}))
+
+(defn nearest-neighbors-kdtree [kd-tree point n]
+  (let [entries (.nearestNeighbor (:kd-tree kd-tree)
+                                  (point-to-array point) n false)]
+    (map #((:points kd-tree) (.value %1)) entries)))
+ 
 (defn weight-function [R]
   (when (< R 1)
     (+ 1 (* -3 R R) (* 2 R R R))))
@@ -118,7 +136,7 @@
   (nearest-neighbor-brute point points))
   
   
-  ;; tests
+  ;; tests(-
 
 (defn create-random-points [n]
   (repeatedly n #(Point2D$Double. (rand) (rand))))
