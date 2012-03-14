@@ -38,9 +38,9 @@
     {:kd-tree tree
      :points points}))
 
-(defn nearest-neighbors-kdtree [kd-tree point n]
+(defn nearest-neighbors-kdtree [kd-tree point n sort?]
   (let [entries (.nearestNeighbor (:kd-tree kd-tree)
-                                  (point-to-array point) n false)]
+                                  (point-to-array point) n sort?)]
     (map #((:points kd-tree) (.value %1)) entries)))
  
 (defn weight-function [R]
@@ -77,19 +77,21 @@
         
 (defrecord control-point [point Rn polyX polyY])
 
-(defn create-control-point [src-point order point-map src-points]
+(defn create-control-point [kd-tree src-point order point-map]
   (let [exponents (polynomial-exponents order)
-        neighbors (nearest-neighbors-brute src-point (count exponents) src-points)
+        n (count exponents)
+        neighbors (nearest-neighbors-kdtree kd-tree src-point n true)
         [polyX polyY] (fit-polynomial exponents
                                       (select-keys point-map neighbors))]
     (control-point. src-point
-                    (.distance src-point (last neighbors))
+                    (.distance src-point (first neighbors))
                     polyX
                     polyY)))
 
-(defn create-control-points [order point-map]
+(defn create-control-points [kd-tree order point-map]
   (let [src-points (keys point-map)]
-    (map #(create-control-point % order point-map src-points) src-points)))
+    (map #(create-control-point
+            kd-tree % order point-map) src-points)))
 
 (defn sum-vals [m kw]
   (apply + (map kw m)))
@@ -102,6 +104,7 @@
 
 (defn make-component-maps [pt exponents control-points]
   (for [control-point control-points]
+    (do
     (let [R (/ (.distance pt (:point control-point))
                (:Rn control-point))]
       (when-let [weight (weight-function R)]
@@ -110,12 +113,13 @@
                                               exponents)]
           {:w weight
            :wpx (* weight (eval-part :polyX))
-           :wpy (* weight (eval-part :polyY))})))))
+           :wpy (* weight (eval-part :polyY))}))))))
 
 (defn generate-lwm-fn [order point-map]
   (def q point-map)
-  (let [exponents (polynomial-exponents order)
-        control-points (create-control-points order point-map)]
+  (let [kd-tree (setup-kd-tree (keys point-map))
+        exponents (polynomial-exponents order)
+        control-points (create-control-points kd-tree order point-map)]
     (fn [pt]
       (weighted-mean-xy
         (filter identity
@@ -136,7 +140,7 @@
   (nearest-neighbor-brute point points))
   
   
-  ;; tests(-
+  ;; tests
 
 (defn create-random-points [n]
   (repeatedly n #(Point2D$Double. (rand) (rand))))
@@ -156,4 +160,3 @@
       (let [finder (lwm.neighbors/nearest-neighbor-finder q)]
         (doseq [q0 (take k q)]
           (finder q0 n))))))
-     
