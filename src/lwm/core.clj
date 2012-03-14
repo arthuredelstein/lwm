@@ -90,8 +90,9 @@
 
 (defn create-control-points [kd-tree order point-map]
   (let [src-points (keys point-map)]
-    (map #(create-control-point
-            kd-tree % order point-map) src-points)))
+    (into {}
+          (for [src-point src-points]
+            [src-point (create-control-point kd-tree src-point order point-map)]))))
 
 (defn sum-vals [m kw]
   (apply + (map kw m)))
@@ -102,18 +103,21 @@
         wpys (sum-vals component-maps :wpy)]
     (Point2D$Double. (/ wpxs ws) (/ wpys ws))))
 
-(defn make-component-maps [pt exponents control-points]
-  (for [control-point control-points]
-    (do
-    (let [R (/ (.distance pt (:point control-point))
-               (:Rn control-point))]
-      (when-let [weight (weight-function R)]
-        (let [eval-part #(evaluate-polynomial (.x pt) (.y pt)
-                                              (% control-point)
-                                              exponents)]
-          {:w weight
-           :wpx (* weight (eval-part :polyX))
-           :wpy (* weight (eval-part :polyY))}))))))
+(defn make-component-maps [pt exponents control-points kd-tree]
+  (for [src-pt (nearest-neighbors-kdtree
+                 kd-tree pt 20 false)]
+    (let [control-point (control-points src-pt)]
+      (do
+        ;(println control-point)
+        (let [R (/ (.distance pt (:point control-point))
+                   (:Rn control-point))]
+          (when-let [weight (weight-function R)]
+            (let [eval-part #(evaluate-polynomial (.x pt) (.y pt)
+                                                  (% control-point)
+                                                  exponents)]
+              {:w weight
+               :wpx (* weight (eval-part :polyX))
+               :wpy (* weight (eval-part :polyY))})))))))
 
 (defn generate-lwm-fn [order point-map]
   (def q point-map)
@@ -123,7 +127,7 @@
     (fn [pt]
       (weighted-mean-xy
         (filter identity
-                (make-component-maps pt exponents control-points))))))
+                (make-component-maps pt exponents control-points kd-tree))))))
         
 ;; java interop
 
