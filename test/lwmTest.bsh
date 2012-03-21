@@ -1,16 +1,18 @@
 import java.awt.geom.Point2D;
 import java.util.Random;
-import valelab.LocalWeightedMean;
+import org.micromanager.lwm.LocalWeightedMean;
 
 rand = new Random();
 
 // Demonstrate LWM with a rectangular grid:
 
-pointPairs = new HashMap();
+pointPairs = new org.micromanager.lwm.LocalWeightedMean.PointMap();
 
 addPair(pointPairss, srcX, srcY, destX, destY) {
    pointPairs.put(new Point2D.Double(srcX, srcY), new Point2D.Double(destX, destY));
 }
+update();
+
 addPair(pointPairs, 0,0,0,0);
 addPair(pointPairs, 0,1,0,2);
 addPair(pointPairs, 1,0,2,0);
@@ -32,7 +34,7 @@ for (int i=0;i<100;++i) {
 }
 
 // findNeighbor(Point2D.Double point, List<Point2D.Double> points) 
-singlePoint = LocalWeightedMean.findNeighbor(new Point2D.Double(0.5, 0.5), pointList);
+//singlePoint = LocalWeightedMean.findNeighbor(new Point2D.Double(0.5, 0.5), pointList);
 
 // findNeighbors(Point2D.Double point, number of desired points, List<Point2D.Double> points) 
 multiplePoints = LocalWeightedMean.findNeighbors(new Point2D.Double(0.5, 0.5), 10, pointList);

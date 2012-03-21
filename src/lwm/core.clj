@@ -20,12 +20,6 @@
                                              java.util.List]
                                  java.util.List]]))
 
-(defn nearest-neighbor-brute [point points]
-  (apply min-key #(.distance point %) points))
-
-(defn nearest-neighbors-brute [point n points]
-  (take n (sort-by #(.distance point %) points)))
-
 (defn point-to-array [^Point2D$Double point]
   (double-array [(.x point) (.y point)]))
 
@@ -137,30 +131,3 @@
 (defn -transform [this src-point]
   ((.lwmFunction this) src-point))
               
-(defn -findNeighbors [point n points]
-  (ArrayList. (nearest-neighbors-brute point n points)))
-
-(defn -findNeighbor [point points]
-  (nearest-neighbor-brute point points))
-  
-  
-  ;; tests
-
-(defn create-random-points [n]
-  (repeatedly n #(Point2D$Double. (rand) (rand))))
-
-(defn -randomTestPointPairs [n]
-  (into {} (map vec (partition 2 (create-random-points (* 2 n))))))
-
-
-(defn find-neighbors [size n k]
-  (let [q (create-random-points size)]
-    (time (doseq [q0 (take k q)]
-            (lwm.neighbors/nearest-neighbors q0 n q)))))
-
-(defn find-neighbors-other [size n k]
-  (let [q (create-random-points size)]
-    (time
-      (let [finder (lwm.neighbors/nearest-neighbor-finder q)]
-        (doseq [q0 (take k q)]
-          (finder q0 n))))))
